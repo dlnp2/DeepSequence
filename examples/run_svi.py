@@ -5,6 +5,8 @@ sys.path.insert(0, "../DeepSequence/")
 import model
 import helper
 import train
+import argparse
+import os
 
 data_params = {
     "dataset"           :   "BLAT_ECOLX"
@@ -35,9 +37,29 @@ train_params = {
     }
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--alignment_file", type=str, default="")
+    parser.add_argument("--working_dir", type=str)
+    args = parser.parse_args()
 
-    data_helper = helper.DataHelper(dataset=data_params["dataset"],
-                                    calc_weights=True)
+    if args.alignment_file != "":
+        alignment_file = args.alignment_file
+        data_params["dataset"] = os.path.basename(alignment_file).split(".")[0]
+    working_dir = args.working_dir if args.working_dir is not None else "."
+
+    data_helper = helper.DataHelper(
+        dataset=data_params["dataset"],
+        calc_weights=True,
+        alignment_file=alignment_file,
+        working_dir=working_dir
+    )
+
+    n_seqs = data_helper.x_train.shape[0]
+    if n_seqs < model_params["bs"]:
+        msg = "Found {} sequences less than batch size: {}.".format(n_seqs, model_params["bs"])
+        msg += " Setting to {}.".format(n_seqs)
+        print(msg)
+        model_params["bs"] = n_seqs
 
     vae_model   = model.VariationalAutoencoder(data_helper,
         batch_size                     =   model_params["bs"],
