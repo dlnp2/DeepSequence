@@ -33,25 +33,24 @@ train_params = {
     "num_updates"       :   300000,
     "save_progress"     :   True,
     "verbose"           :   True,
-    "save_parameters"   :   False,
+    # "save_parameters"   :   False,
+    "save_parameters"   :   30000,
     }
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--alignment_file", type=str, default="")
-    parser.add_argument("--working_dir", type=str)
+    parser.add_argument("--working_dir", type=str, default=".")
     args = parser.parse_args()
 
     if args.alignment_file != "":
-        alignment_file = args.alignment_file
-        data_params["dataset"] = os.path.basename(alignment_file).split(".")[0]
-    working_dir = args.working_dir if args.working_dir is not None else "."
+        data_params["dataset"] = os.path.basename(args.alignment_file).split(".")[0]
 
     data_helper = helper.DataHelper(
         dataset=data_params["dataset"],
         calc_weights=True,
-        alignment_file=alignment_file,
-        working_dir=working_dir
+        alignment_file=args.alignment_file,
+        working_dir=args.working_dir
     )
 
     n_seqs = data_helper.x_train.shape[0]
@@ -78,6 +77,7 @@ if __name__ == "__main__":
         convolve_patterns              =   model_params["conv_pat"],
         n_patterns                     =   model_params["n_pat"],
         random_seed                    =   model_params["r_seed"],
+        working_dir                    =   args.working_dir
         )
 
     job_string = helper.gen_job_string(data_params, model_params)
